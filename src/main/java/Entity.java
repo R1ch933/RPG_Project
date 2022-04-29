@@ -1,8 +1,11 @@
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.random.*;
 
 public abstract class Entity {
     private String name;
     private boolean Life;
+    private int MaxHp;
     private int Hp;
     private int Mp;
     private int Att;
@@ -10,11 +13,13 @@ public abstract class Entity {
     private int Def;
     private int SpDef;
     private int Spd;
+    private int spDmgNum;
     private ArrayList<String> specials = new ArrayList<String>();
 
     public Entity(){}
 
     public Entity(String name, int hp, int mp, int att, int def, int spd, int spatt, int spdef) {
+        this.MaxHp = hp;
         this.setName(name);
         this.setHp(hp);
         this.setMp(mp);
@@ -36,6 +41,7 @@ public abstract class Entity {
     public void setSpAtt(int spatt) {this.SpAtt = spatt;}
     public void setSpDef(int spdef) {this.SpDef = spdef;}
     public void setLife(boolean alive) {this.Life = alive;}
+    public void setMaxHp(int max) {this.MaxHp = max;}
     public void addSpecials(String specialAttack) {this.specials.add(specialAttack);}
 
     public String getName() {return this.name;}
@@ -47,24 +53,84 @@ public abstract class Entity {
     public int getSpd() {return this.Spd;}
     public int getSpAtt() {return this.SpAtt;}
     public int getSpDef() {return this.SpDef;}
+    public int getMaxHp() {return this.MaxHp;}
 
-    public void takeDmg(int enemyAtt, String type) {
-        if (type == "normal") {
-            enemyAtt -= this.getDef();
-            this.setHp(this.getHp() - enemyAtt);
-
-        } else if (type == "special") {
-            enemyAtt -= this.getSpDef();
-            this.setHp(this.getHp() - enemyAtt);
-
+    public void takeDmg(int enemyAtt) {
+        enemyAtt -= this.getDef();
+        if (enemyAtt < 0) {
+            enemyAtt = 1;
         }
-        else {
-            throw new RuntimeException("Expected 'normal' or 'special' in attack type. Recieved " + type + " instead.");
+        this.setSpDmgNum(enemyAtt);
+        this.setHp(this.getHp() - enemyAtt);
+        if (this.getHp() < 0) {
+            this.setHp(0);
         }
     }
 
-    public boolean checkAlive(int hp) {
-        if (hp < 0) {
+    public void takeSpDmg(int minDmg, int maxDmg) {
+        int chosenNum;
+        Random numberGen = new Random();
+        ArrayList<Integer> dmgNums = new ArrayList<Integer>();
+        if (minDmg == 0 && maxDmg == 0) {
+            chosenNum = 0;
+        } else {
+            for (int i = minDmg; i < maxDmg + 1; i++) {
+                dmgNums.add(i);
+            }
+            chosenNum = dmgNums.get(numberGen.nextInt(dmgNums.size()));
+        }
+        if (chosenNum > 0) {
+            chosenNum -= this.getSpDef();
+            if (chosenNum < 0) {
+                chosenNum = 1;
+            }
+        }
+        this.setHp(this.getHp() - chosenNum);
+        if (this.getHp() < 0) {
+            this.setHp(0);
+        }
+
+        this.setSpDmgNum(chosenNum);
+    }
+
+    public void healSelf(int minDmg, int maxDmg) {
+        int chosenHeal;
+        Random numberGen = new Random();
+        ArrayList<Integer> dmgNums = new ArrayList<Integer>();
+        for (int i = minDmg; i < maxDmg + 1; i++) {
+            dmgNums.add(i);
+        }
+        chosenHeal = dmgNums.get(numberGen.nextInt(dmgNums.size()));
+        this.setHp(this.getHp() + chosenHeal);
+        if (this.getHp() > this.getMaxHp()) {
+            this.setHp(this.getMaxHp());
+        }
+        this.setSpDmgNum(chosenHeal);
+    }
+
+
+    public void takeDebuff(int debuff) {
+        this.setSpDef(this.getSpDef() - debuff);
+        if (this.getSpDef() < 0) {
+            this.setSpDef(0);
+        }
+        this.setDef(this.getDef() - debuff);
+        if (this.getDef() < 0) {
+            this.setDef(0);
+        }
+        this.setSpDmgNum(debuff);
+    }
+
+    public void setSpDmgNum(int num) {
+        this.spDmgNum = num;
+    }
+
+    public int getSpDmgNum() {
+        return this.spDmgNum;
+    }
+
+    public boolean checkAlive() {
+        if (this.getHp() == 0) {
             return false;
         }
         return true;
