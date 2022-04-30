@@ -1,9 +1,8 @@
-import java.util.ArrayList;
-
+/**
+ * This subclass aggregates both Entity and the Special class
+ */
 public class Hero extends Entity{
-
-    private ArrayList<Special> specialMoves = new ArrayList<Special>();
-
+    public Hero(){}
     /**
      * Constructor for the player subclass that is very similar to entity
      * @param name
@@ -36,11 +35,12 @@ public class Hero extends Entity{
      * @param max
      * @param type
      * @param cost
-     * @override
      */
+    @Override
     public void addSpecial(String name, int min, int max, String type, int cost) {
-        this.specialMoves.add(new Special(name, min, max,type, cost));
+        this.getSpecialMoves().add(new Special(name, min, max,type, cost));
     }
+
 
     /**
      * This is adding a special object as well, but this is particularly for buffs and debuffs and is a counterpart to addSpecial
@@ -50,16 +50,8 @@ public class Hero extends Entity{
      * @param c
      */
     public void addBuffer(String name, int db, int b, int c) {
-        this.specialMoves.add(new Special(name, db,b, c));
+        this.getSpecialMoves().add(new Special(name, db,b, c));
 
-    }
-
-    /**
-     * gets the arraylist containing assortment of Special objects representing the player's moves
-     * @return ArrayList
-     */
-    public ArrayList<Special> getSpecialMoves() {
-        return this.specialMoves;
     }
 
     /**

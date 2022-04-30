@@ -1,4 +1,3 @@
-import com.sun.javafx.tk.Toolkit;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -8,30 +7,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
 import javafx.scene.control.TextArea;
 import javafx.scene.effect.ColorInput;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Box;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.ColorModel;
-import java.lang.reflect.Array;
-import java.security.Key;
-import java.sql.Time;
+
 import java.util.ArrayList;
-import java.util.Random;
-import java.util.Timer;
-import java.util.random.*;
+
 
 public class Main extends Application {
     /**
@@ -42,7 +30,7 @@ public class Main extends Application {
 
     private TextArea teller = new TextArea();
     private Hero player = new Hero("Hiro", 50, 20, 8, 5, 10, 10, 5); //arbitrary stat lineups
-    private Enemy mob = new Enemy("Happy Suit", 20, 30, 7, 7, 15, 5, 2, 35, 15);
+    private Enemy mob = new Enemy("Happy Suit", 20, 10, 7, 15, 5, 2, 35, 15);
     private javafx.scene.control.Button attackBtn = new javafx.scene.control.Button("Attack");
     private javafx.scene.control.Button specialBtn = new javafx.scene.control.Button("Special");
     private javafx.scene.control.Button scanBtn = new javafx.scene.control.Button("Scan");
@@ -50,7 +38,8 @@ public class Main extends Application {
     private String displayedText = "You Encountered " + mob.getName()+ "!";
     private ArrayList<String> textStorage = new ArrayList<String>();
     private ArrayList<Button> specialMoves = new ArrayList<Button>();
-    private ImageView enemySp = new ImageView("./images/Enemy.png");
+    private ImageView enemySp = new ImageView("media/Enemy.png");
+
 
     private Pane actionMenu = new Pane();
     private Pane backGround = new Pane();
@@ -181,6 +170,7 @@ public class Main extends Application {
      */
 
     public void winScrn() {
+        almostDead.stop();
         attack.stop();
         backgroundFX.stop();
         defeat.play();
@@ -188,6 +178,7 @@ public class Main extends Application {
         textStorage.add(" You've Won!\n");
         textStorage.add(" You got " + mob.getExp() + " exp.\n");
         textStorage.add(" You got " + mob.getGold() + " gold\n");
+        textStorage.add(" Thanks for playing!");
         attackBtn.setDisable(true);
         specialBtn.setDisable(true);
         scanBtn.setDisable(true);
@@ -210,12 +201,16 @@ public class Main extends Application {
         for (String e: textStorage) {
             displayedText = displayedText + e;
         }
+        if ((player.getHp() < (player.getMaxHp()*.3)) && mob.getHp() >0) {
+            ohNo();
+        }
         updateDisplay();
 
     }
 
     /**
-     * This is a turn if the player chooses to simply attack. Spd and other stats will affect the outcome.
+     * This is a turn if the player chooses to simply attack. Spd and other stats will affect the outcome. Spd in particular will decide which Entity
+     * will take action first. Players/Enemies can die before they can take action.
      */
 
     public void attackTurn() {
@@ -334,6 +329,7 @@ public class Main extends Application {
             displayedText = displayedText + e;
         }
         isGameOver();
+
     }
 
     /**
@@ -388,11 +384,7 @@ public class Main extends Application {
             } else {
                 textStorage.add(player.getName() + " casted " + move + ": " + "Enemy def/sp dropped by " + mob.getSpDmgNum() + "!\n");
             }
-        }
-         attack.play();
-         if (player.getHp() < (player.getMaxHp()*.3)) {
-             ohNo();
-         }
+        }attack.play();
         specialMenu.setVisible(false);
 
     }
@@ -405,6 +397,7 @@ public class Main extends Application {
     public void attackPlayer(String type) {
         player.takeDmg(mob.getAtt());
         textStorage.add(mob.getName() + " attacked: " + player.getName() + " took " + player.getSpDmgNum() + " Damage!\n");
+
     }
 
     /** Start will **launch Maven** with the respected code that renders the battle screen appropriately. All visuals are calibrated here using private
@@ -412,7 +405,6 @@ public class Main extends Application {
      */
     @Override
     public void start(Stage stage) {
-
         Boolean putLeft = true;
 
         loadChar();

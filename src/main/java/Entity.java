@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.random.*;
 
 /**
- * This class represents the universal things most enemies/players will center around
+ * This ABSTRACT class represents the universal things most enemies/players will center around
  */
 public abstract class Entity {
     private Random randomNum = new Random();
@@ -19,6 +19,7 @@ public abstract class Entity {
     private int SpDef;
     private int Spd;
     private int spDmgNum; //This is an attribute to spit out for text display on the UI e.g. "he took spDmgNum amount of dmg!"
+    private ArrayList<Special> specialMoves = new ArrayList<Special>(); //This stores special moves
 
     /**
      * base constructor for any subclasses
@@ -78,6 +79,9 @@ public abstract class Entity {
     public int getSpAtt() {return this.SpAtt;}
     public int getSpDef() {return this.SpDef;}
     public int getMaxHp() {return this.MaxHp;}
+    public ArrayList<Special> getSpecialMoves() {
+        return this.specialMoves;
+    }
     /**
      * This is how damage is calculated on basic attacks. Dmg received will be affected by randomness and def stat
      * @param enemyAtt
@@ -104,6 +108,12 @@ public abstract class Entity {
         }
     }
 
+    /**
+     * An abstract method for accumulating moves in subclasses
+     */
+    public void addSpecial(Special move) {
+        this.specialMoves.add(move);
+    };
     /**
      * Spells have min and max dmg built in. The calculations include randomization of the range of dmg and spdef stats
      * @param minDmg
@@ -208,4 +218,6 @@ public abstract class Entity {
         }
         return true;
     }
+
+    public abstract void addSpecial(String name, int min, int max, String type, int cost);
 }
