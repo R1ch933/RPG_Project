@@ -33,21 +33,20 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.random.*;
 
-
-
-
 public class Main extends Application {
+    /**
+     * This is where all the attributes will be defined to be used to calibrate the rendering in start()
+     */
 
     private final int windowSize = 500;
 
-
     private TextArea teller = new TextArea();
-    private Hero player = new Hero("Hiro", 50, 20, 1, 5, 10, 10, 5);
-    private Enemy mob = new Enemy("Happy Suit", 20, 30, 10, 0, 15, 5, 2, 35, 15);
+    private Hero player = new Hero("Hiro", 50, 20, 8, 5, 10, 10, 5); //arbitrary stat lineups
+    private Enemy mob = new Enemy("Happy Suit", 20, 30, 7, 7, 15, 5, 2, 35, 15);
     private javafx.scene.control.Button attackBtn = new javafx.scene.control.Button("Attack");
     private javafx.scene.control.Button specialBtn = new javafx.scene.control.Button("Special");
     private javafx.scene.control.Button scanBtn = new javafx.scene.control.Button("Scan");
-    private Button backBtn = new Button("<--");
+    private Button backBtn = new Button("Back");
     private String displayedText = "You Encountered " + mob.getName()+ "!";
     private ArrayList<String> textStorage = new ArrayList<String>();
     private ArrayList<Button> specialMoves = new ArrayList<Button>();
@@ -68,35 +67,37 @@ public class Main extends Application {
     private HBox menuRight = new HBox();
 
     private ColorInput effect = new ColorInput(0, 0, 500, 290, Paint.valueOf("gray"));
+    private ColorInput urgency = new ColorInput(0, 0, 500, 290, Paint.valueOf("pink"));
+    //These are all the animations that can be played in this application.
     private Timeline backgroundFX = new Timeline(
-                new KeyFrame(Duration.seconds(2), new KeyValue(effect.paintProperty(), Paint.valueOf("darkgray"))),
-            new KeyFrame(Duration.seconds(4), new KeyValue(effect.paintProperty(), Paint.valueOf("gray"))),
-            new KeyFrame(Duration.seconds(4), new KeyValue(effect.paintProperty(), Paint.valueOf("black"))),
-            new KeyFrame(Duration.seconds(4), new KeyValue(effect.paintProperty(), Paint.valueOf("gray"))),
-            new KeyFrame(Duration.seconds(2), new KeyValue(effect.paintProperty(), Paint.valueOf("darkgray"))));
+                new KeyFrame(Duration.seconds(1.5), new KeyValue(effect.paintProperty(), Paint.valueOf("darkgray"))),
+            new KeyFrame(Duration.seconds(3), new KeyValue(effect.paintProperty(), Paint.valueOf("gray"))),
+            new KeyFrame(Duration.seconds(3), new KeyValue(effect.paintProperty(), Paint.valueOf("black"))),
+            new KeyFrame(Duration.seconds(3), new KeyValue(effect.paintProperty(), Paint.valueOf("gray"))),
+            new KeyFrame(Duration.seconds(1.5), new KeyValue(effect.paintProperty(), Paint.valueOf("darkgray"))));
     private Timeline attack = new Timeline(
             new KeyFrame(Duration.seconds(.1), new KeyValue(enemySp.yProperty(), -35)),
             new KeyFrame(Duration.seconds(.3), new KeyValue(enemySp.yProperty(), 5)),
             new KeyFrame(Duration.seconds(.3), new KeyValue(enemySp.yProperty(), 10)),
             new KeyFrame(Duration.seconds(.3), new KeyValue(enemySp.yProperty(), 20))
             );
-
-    private ColorInput urgency = new ColorInput(0, 0, 500, 290, Paint.valueOf("pink"));
+    private Timeline scanned = new Timeline(
+            new KeyFrame(Duration.seconds(.5), new KeyValue(effect.paintProperty(), Paint.valueOf("darkgray"))),
+            new KeyFrame(Duration.seconds(.3), new KeyValue(effect.paintProperty(), Paint.valueOf("yellow"))),
+            new KeyFrame(Duration.seconds(.3), new KeyValue(effect.paintProperty(), Paint.valueOf("gold"))));
+    private Timeline defeat = new Timeline(
+            new KeyFrame(Duration.seconds(.2), new KeyValue(enemySp.opacityProperty(), 0)));
     private Timeline almostDead = new Timeline(
             new KeyFrame(Duration.seconds(.4), new KeyValue(urgency.paintProperty(), Paint.valueOf("pink"))),
             new KeyFrame(Duration.seconds(.8), new KeyValue(urgency.paintProperty(), Paint.valueOf("red"))),
             new KeyFrame(Duration.seconds(1.0), new KeyValue(urgency.paintProperty(), Paint.valueOf("pink"))));
 
-
-    private HBox test = new HBox();
-    private HBox test2 = new HBox();
-
     /**
      * This is constructing magic moves for the player to access in the battle through the Hero subclass
      */
     public void loadChar() {
-        player.addSpecial("FireBall", 1, 3,  4);
-        player.addSpecial("Heal", 25, 35,  8);
+        player.addSpecial("FireBall", 2+player.getSpAtt(), 4+player.getSpAtt(), "hurt",  4);
+        player.addSpecial("Heal", 25, 35, "heal",  8);
         player.addBuffer("Sap", 10, 0, 5);
         player.addBuffer("Agility UP", 0, 10, 8);
     }
@@ -180,6 +181,10 @@ public class Main extends Application {
      */
 
     public void winScrn() {
+        attack.stop();
+        backgroundFX.stop();
+        defeat.play();
+        enemySp.setOpacity(0);
         textStorage.add(" You've Won!\n");
         textStorage.add(" You got " + mob.getExp() + " exp.\n");
         textStorage.add(" You got " + mob.getGold() + " gold\n");
@@ -301,10 +306,12 @@ public class Main extends Application {
 
     /**
      * This is if the player chooses the scan move. It will scan for enemy stats while the enemy still attacks. This consumes a turn and players
-     * can still die after enemy attack.
+     * can still die after enemy attack. It is made distinct with its yellow flash.
      */
 
     public void scanTurn() {
+        scanned.play();
+
         textStorage.clear();
         displayedText = "";
         if (checkSpd()) {
@@ -327,8 +334,11 @@ public class Main extends Application {
             displayedText = displayedText + e;
         }
         isGameOver();
-        updateDisplay();
     }
+
+    /**
+     * This function will be called when the player is at low health (30% of max). The backgroundFX will flash red instead of its black and gray
+     */
 
     public void ohNo() {
         backgroundFX.stop();
@@ -346,7 +356,6 @@ public class Main extends Application {
 
     public void attackEnemy(String type, String move) {
         Special chosenMove;
-
         if (type == "hurt") {
             chosenMove = player.getSpecial(move);
             player.setMp(player.getMp() - chosenMove.getCost());
@@ -389,32 +398,33 @@ public class Main extends Application {
     }
 
     /**
-     *
-     * @param type
+     *For the sake of avoiding over-complexity, enemies will merely attack the player with basic attacks.
+     * @param type this will always be normal but can theoretically function similar to attackEnemy
      */
 
     public void attackPlayer(String type) {
         player.takeDmg(mob.getAtt());
-        textStorage.add(mob.getName() + " attacked: You took " + player.getSpDmgNum() + " Damage!\n");
+        textStorage.add(mob.getName() + " attacked: " + player.getName() + " took " + player.getSpDmgNum() + " Damage!\n");
     }
 
-    /** Set up a maven run profile in intellij or use maven from the command-line.
-        Use the javafx:run argument to start the javafx application.
-        Update all code and comments in this tempalte to suit your own project.
+    /** Start will **launch Maven** with the respected code that renders the battle screen appropriately. All visuals are calibrated here using private
+     * attributes defined in the very beginning of this file.
      */
     @Override
     public void start(Stage stage) {
 
         Boolean putLeft = true;
 
+        loadChar();
+        loadSpecialMoves();
+
         //setting textarea
         teller.setText(displayedText);
         teller.setStyle("-fx-background-color: black");
         teller.setEditable(false);
-        loadChar();
-        loadSpecialMoves();
+        teller.setPrefSize(200,100);
+        teller.setStyle("-fx-font-size: 18;");
 
-        teller.setStyle("-fx-font-size: 18;-fx-text-alignment: justify");
         //setting action buttons
         attackBtn.setPrefHeight(70);
         attackBtn.setPrefWidth(166);
@@ -428,15 +438,16 @@ public class Main extends Application {
         scanBtn.setPrefWidth(166);
         scanBtn.setStyle("-fx-font-size: 20; -fx-text-fill: white; -fx-background-color:linear-gradient(to top, gray, gray, gray, lightgray)");
         scanBtn.setOnAction(e -> scanTurn());
-        backBtn.setPrefHeight(20);
+        backBtn.setStyle("-fx-font-size: 10");
+        backBtn.setPrefHeight(70);
         backBtn.setPrefWidth(35);
         backBtn.setOnAction(e->specialMenu.setVisible(false));
 
         //setting up visuals
         menuLeft.setPrefSize(232, 120);
-        menuLeft.setStyle("-fx-background-color: green;");
+        menuLeft.setStyle("-fx-background-color: linear-gradient(to top, gray, gray, gray, lightgray);");
         menuRight.setPrefSize(232, 120);
-        menuRight.setStyle("-fx-background-color: red;");
+        menuRight.setStyle("-fx-background-color: linear-gradient(to top, gray, gray, gray, lightgray);");
 
         specialMenu.setPrefSize(500,120);
         specialMenu.setStyle("-fx-background-color: white");
@@ -450,18 +461,22 @@ public class Main extends Application {
         specialList.getChildren().add(menuLeft);
         specialList.getChildren().add(menuRight);
 
+        //dynamically adding in magic move buttons
         for (Button e: specialMoves) {
             e.setStyle("-fx-pref-width: 100;");
             if (putLeft) {
                 menuLeft.getChildren().add(e);
+
                 putLeft = false;
             } else {
                 menuRight.getChildren().add(e);
+
                 putLeft = true;
             }
 
         }
 
+        //further rendering visuals
         health.setStyle("-fx-text-fill: white");
         magic.setStyle("-fx-text-fill: white");
         stats.getChildren().add(health);
@@ -473,9 +488,6 @@ public class Main extends Application {
         backGround.setEffect(effect);
         backgroundFX.setCycleCount(Animation.INDEFINITE);
         backgroundFX.play();
-
-
-        teller.setPrefSize(200,100);
 
         actionButtons.setPrefSize(500,15);
         actionButtons.getChildren().add(attackBtn);
@@ -493,6 +505,7 @@ public class Main extends Application {
         windowLayout.setCenter(backGround);
         windowLayout.setTop(teller);
 
+        //adding enemy sprite
         windowLayout.getChildren().add(enemySp);
         enemySp.setFitHeight(200);
         enemySp.setFitWidth(200);

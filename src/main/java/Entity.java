@@ -1,7 +1,11 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.random.*;
 
+/**
+ * This class represents the universal things most enemies/players will center around
+ */
 public abstract class Entity {
     private Random randomNum = new Random();
     private String name;
@@ -14,11 +18,24 @@ public abstract class Entity {
     private int Def;
     private int SpDef;
     private int Spd;
-    private int spDmgNum;
-    private ArrayList<String> specials = new ArrayList<String>();
+    private int spDmgNum; //This is an attribute to spit out for text display on the UI e.g. "he took spDmgNum amount of dmg!"
 
+    /**
+     * base constructor for any subclasses
+     */
     public Entity(){}
 
+    /**
+     * constructor with stats for most entities like enemies and players.
+     * @param name
+     * @param hp
+     * @param mp
+     * @param att
+     * @param def
+     * @param spd
+     * @param spatt
+     * @param spdef
+     */
     public Entity(String name, int hp, int mp, int att, int def, int spd, int spatt, int spdef) {
         this.MaxHp = hp;
         this.setName(name);
@@ -33,6 +50,9 @@ public abstract class Entity {
 
     }
 
+    /**
+     * These are all the setters for all the private attributes
+     */
     public void setName(String name) {this.name = name;}
     public void setHp(int hp) {this.Hp = hp;}
     public void setMp(int mp) {this.Mp = mp;}
@@ -43,8 +63,11 @@ public abstract class Entity {
     public void setSpDef(int spdef) {this.SpDef = spdef;}
     public void setLife(boolean alive) {this.Life = alive;}
     public void setMaxHp(int max) {this.MaxHp = max;}
-    public void addSpecials(String specialAttack) {this.specials.add(specialAttack);}
 
+    /**
+     * These are all the getters for all the private attributes.
+     * @return class attributes
+     */
     public String getName() {return this.name;}
     public boolean getLife() {return this.Life;}
     public int getHp() {return this.Hp;}
@@ -55,7 +78,10 @@ public abstract class Entity {
     public int getSpAtt() {return this.SpAtt;}
     public int getSpDef() {return this.SpDef;}
     public int getMaxHp() {return this.MaxHp;}
-
+    /**
+     * This is how damage is calculated on basic attacks. Dmg received will be affected by randomness and def stat
+     * @param enemyAtt
+     */
     public void takeDmg(int enemyAtt) {
         int chosenDmg;
         int minDmg = enemyAtt;
@@ -78,6 +104,11 @@ public abstract class Entity {
         }
     }
 
+    /**
+     * Spells have min and max dmg built in. The calculations include randomization of the range of dmg and spdef stats
+     * @param minDmg
+     * @param maxDmg
+     */
     public void takeSpDmg(int minDmg, int maxDmg) {
         int chosenNum;
         ArrayList<Integer> dmgNums = new ArrayList<Integer>();
@@ -103,7 +134,15 @@ public abstract class Entity {
         this.setSpDmgNum(chosenNum);
     }
 
+    /**
+     * Healing is unique enough to warrant a differentiated function. Most notably because negative numbers are a problem for runtime. Will heal
+     * and increase HP stat, but not beyond MaxHp
+     * @param minDmg
+     * @param maxDmg
+     */
     public void healSelf(int minDmg, int maxDmg) {
+
+
         int chosenHeal;
         ArrayList<Integer> dmgNums = new ArrayList<Integer>();
         for (int i = minDmg; i < maxDmg + 1; i++) {
@@ -117,7 +156,10 @@ public abstract class Entity {
         this.setSpDmgNum(chosenHeal);
     }
 
-
+    /**
+     * debuffs decrease stats but not below zero.
+     * @param debuff
+     */
     public void takeDebuff(int debuff) {
         this.setSpDef(this.getSpDef() - debuff);
         if (this.getSpDef() < 0) {
@@ -129,19 +171,37 @@ public abstract class Entity {
         }
         this.setSpDmgNum(debuff);
     }
+
+    /**
+     * In this particular case, this is a spdbuff that increases spd stat. Because spd stat affects which Entity takes action first,
+     * it must have its own distinct function. Although there are no other buffs in this particular program.
+     * @param buff
+     */
     public void takeSpdBuff(int buff) {
         this.setSpd(this.getSpd() + buff);
         this.setSpDmgNum(buff);
     }
 
+    /**
+     * Sets SpDmgNum; this number is used for dialogue purposes
+     * @param num
+     */
     public void setSpDmgNum(int num) {
         this.spDmgNum = num;
     }
 
+    /**
+     * getter for SpDmgNum
+     * @return int
+     */
     public int getSpDmgNum() {
         return this.spDmgNum;
     }
 
+    /**
+     * Checks if entity is alive for gameover/win
+     * @return boolean
+     */
     public boolean checkAlive() {
         if (this.getHp() == 0) {
             return false;
