@@ -18,8 +18,12 @@ public class Hero extends Entity{
 
     }
 
-    public void addSpecial(String name, int min, int max, int db, String type, int cost) {
-        this.specialMoves.add(new Special(name, min, max, db, type, cost));
+    public void addSpecial(String name, int min, int max, int cost) {
+        this.specialMoves.add(new Special(name, min, max, cost));
+    }
+    public void addBuffer(String name, int db, int b, int c) {
+        this.specialMoves.add(new Special(name, db,b, c));
+
     }
 
     public ArrayList<Special> getSpecialMoves() {

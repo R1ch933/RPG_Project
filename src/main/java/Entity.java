@@ -3,6 +3,7 @@ import java.util.Random;
 import java.util.random.*;
 
 public abstract class Entity {
+    private Random randomNum = new Random();
     private String name;
     private boolean Life;
     private int MaxHp;
@@ -56,12 +57,22 @@ public abstract class Entity {
     public int getMaxHp() {return this.MaxHp;}
 
     public void takeDmg(int enemyAtt) {
-        enemyAtt -= this.getDef();
-        if (enemyAtt < 0) {
-            enemyAtt = 1;
+        int chosenDmg;
+        int minDmg = enemyAtt;
+        int maxDmg = enemyAtt*2;
+
+        ArrayList<Integer> dmgNums = new ArrayList<Integer>();
+        for (int i = minDmg; i < maxDmg + 1; i++) {
+            dmgNums.add(i);
         }
-        this.setSpDmgNum(enemyAtt);
-        this.setHp(this.getHp() - enemyAtt);
+        chosenDmg = dmgNums.get(this.randomNum.nextInt(dmgNums.size()));
+
+        chosenDmg -= this.getDef();
+        if (chosenDmg < 0) {
+            chosenDmg = 1;
+        }
+        this.setSpDmgNum(chosenDmg);
+        this.setHp(this.getHp() - chosenDmg);
         if (this.getHp() < 0) {
             this.setHp(0);
         }
@@ -69,7 +80,6 @@ public abstract class Entity {
 
     public void takeSpDmg(int minDmg, int maxDmg) {
         int chosenNum;
-        Random numberGen = new Random();
         ArrayList<Integer> dmgNums = new ArrayList<Integer>();
         if (minDmg == 0 && maxDmg == 0) {
             chosenNum = 0;
@@ -77,7 +87,7 @@ public abstract class Entity {
             for (int i = minDmg; i < maxDmg + 1; i++) {
                 dmgNums.add(i);
             }
-            chosenNum = dmgNums.get(numberGen.nextInt(dmgNums.size()));
+            chosenNum = dmgNums.get(this.randomNum.nextInt(dmgNums.size()));
         }
         if (chosenNum > 0) {
             chosenNum -= this.getSpDef();
@@ -95,12 +105,11 @@ public abstract class Entity {
 
     public void healSelf(int minDmg, int maxDmg) {
         int chosenHeal;
-        Random numberGen = new Random();
         ArrayList<Integer> dmgNums = new ArrayList<Integer>();
         for (int i = minDmg; i < maxDmg + 1; i++) {
             dmgNums.add(i);
         }
-        chosenHeal = dmgNums.get(numberGen.nextInt(dmgNums.size()));
+        chosenHeal = dmgNums.get(this.randomNum.nextInt(dmgNums.size()));
         this.setHp(this.getHp() + chosenHeal);
         if (this.getHp() > this.getMaxHp()) {
             this.setHp(this.getMaxHp());
@@ -119,6 +128,10 @@ public abstract class Entity {
             this.setDef(0);
         }
         this.setSpDmgNum(debuff);
+    }
+    public void takeSpdBuff(int buff) {
+        this.setSpd(this.getSpd() + buff);
+        this.setSpDmgNum(buff);
     }
 
     public void setSpDmgNum(int num) {

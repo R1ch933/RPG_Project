@@ -5,14 +5,25 @@ public class Special {
     private int minDmg;
     private int maxDmg;
     private int debuff;
+    private int buff;
     private int cost;
 
-    public Special(String name, int minDmg, int maxDmg, int debuff, String type, int cost) {
+    public Special(String name, int minDmg, int maxDmg, String type, int cost) {
         this.name = name;
         this.minDmg = minDmg;
         this.maxDmg = maxDmg;
+        this.debuff = 0;
+        this.type = "hurt";
+        this.cost = cost;
+        this.buff = 0;
+    }
+    public Special(String name, int debuff, int buff, int cost) {
+        this.name = name;
+        this.minDmg = 0;
+        this.maxDmg = 0;
         this.debuff = debuff;
-        this.type = type;
+        this.buff = buff;
+        this.setBuff(buff);
         this.cost = cost;
     }
     public int getMinDmg() {
@@ -21,6 +32,7 @@ public class Special {
     public int getMaxDmg() {
         return this.maxDmg;
     }
+    public int getBuff() {return this.buff;}
     public int getDebuff() {
         return this.debuff;
     }
@@ -32,5 +44,13 @@ public class Special {
     }
     public int getCost() {
         return this.cost;
+    }
+    public void setBuff(int buff) {
+        if (buff > 0) {
+            this.type = "buff";
+        }
+        else {
+            this.type = "debuff";
+        }
     }
 }
